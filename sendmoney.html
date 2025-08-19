@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send Money</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1f1144, #0a3a4a);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 50px;
+    }
+
+    .navbar {
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #12031d;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    .form-container {
+      max-width: 400px;
+      width: 100%;
+      background: #121826;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      color: #e5e7eb;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #7c3aed;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #9aa4b2;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      background: #0f1422;
+      color: #fff;
+      outline: none;
+      font-size: 14px;
+    }
+
+    input:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 8px rgba(124,58,237,0.5);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background: linear-gradient(90deg, #7c3aed, #22d3ee);
+      color: #071019;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform .05s ease, background .3s;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #5b2cb0, #0d8b99);
+    }
+
+    /* Confirmation Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      display: none;
+    }
+
+    .modal-content {
+      background: #121826;
+      padding: 25px;
+      border-radius: 14px;
+      width: 90%;
+      max-width: 350px;
+      text-align: center;
+      color: #e5e7eb;
+    }
+
+    .modal-content h3 {
+      margin-bottom: 15px;
+      color: #7c3aed;
+    }
+
+    .modal-content p {
+      margin-bottom: 20px;
+    }
+
+    .modal-content button {
+      width: 45%;
+      margin: 0 5%;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <h1>Bora Pay</h1>
+    <a href="home.html" style="color:white; text-decoration:none;">Home</a>
+  </div>
+
+  <div class="form-container">
+    <h2>Send Money</h2>
+    <form id="sendMoneyForm">
+      <label for="phone">Phone Number</label>
+      <input type="text" id="phone" name="phone" placeholder="Enter phone number" required>
+
+      <label for="amount">Amount</label>
+      <input type="number" id="amount" name="amount" placeholder="Enter amount" required>
+
+      <label for="pin">PIN</label>
+      <input type="password" id="pin" name="pin" placeholder="Enter your PIN" required>
+
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Confirm Transfer</h3>
+      <p>Send <strong id="confirmAmount"></strong> to <strong id="confirmPhone"></strong>?</p>
+      <button id="confirmBtn">Confirm</button>
+      <button id="cancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+    const supabaseUrl = "https://oaejnmigzuodvzszldjl.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZWpubWlnenVvZHZ6c3psZGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1Mjg3NDAsImV4cCI6MjA3MTEwNDc0MH0.pJCuMhExU89-uJrO8_hFzfK2ztVz1rZUjtYOygdSzG4";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const sendMoneyForm = document.getElementById('sendMoneyForm');
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmPhone = document.getElementById('confirmPhone');
+    const confirmAmount = document.getElementById('confirmAmount');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    sendMoneyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const phone = document.getElementById('phone').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const pin = document.getElementById('pin').value.trim();
+
+      if (!phone || !amount || !pin) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { alert("You must be logged in!"); return; }
+
+      const { data: pinData } = await supabase.from('pins').select('pin').eq('user_id', user.id).single();
+      if (!pinData || pinData.pin !== pin) { alert("Incorrect PIN."); return; }
+
+      const { data: walletData } = await supabase.from('wallets').select('balance').eq('user_id', user.id).single();
+      if (!walletData) { alert("Wallet not found."); return; }
+      if (walletData.balance < amount) { alert("Insufficient balance."); return; }
+
+      confirmPhone.textContent = phone;
+      confirmAmount.textContent = amount.toFixed(2);
+      confirmModal.classList.remove('hidden');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      confirmModal.classList.add('hidden');
+    });
+
+    confirmBtn.addEventListener('click', async () => {
+      confirmModal.classList.add('hidden');
+
+      const phone = document.getElementById('phone').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      try {
+        const res = await fetch('http://localhost:5000/api/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user.id, phone, amount })
+        });
+        const data = await res.json();
+        if (data.error) alert("Transfer failed: " + data.error);
+        else alert("Money sent successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Error connecting to server.");
+      }
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account - Bora Pay</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 10% -10%, #1f1144 0%, transparent 60%),
+                  radial-gradient(900px 600px at 110% 20%, #0a3a4a 0%, transparent 55%),
+                  #0d0d0d;
+      color: white;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #00ffff;
+    }
+
+    .balance {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      color: #00ffff;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #00ffff;
+      border: none;
+      border-radius: 8px;
+      color: #1f1144;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #00cccc;
+    }
+
+    .logout {
+      background: #ef4444;
+      color: white;
+    }
+
+    .logout:hover {
+      background: #dc2626;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="flex justify-between items-center px-8 py-4 bg-black/40 backdrop-blur-md sticky top-0">
+    <h1 class="text-2xl font-bold text-cyan-400">Bora Pay</h1>
+    <ul class="flex space-x-6">
+      <li><a href="home.html" class="hover:text-cyan-300">Home</a></li>
+      <li><a href="services.html" class="hover:text-cyan-300">Services</a></li>
+      <li><a href="pricing.html" class="hover:text-cyan-300">Pricing</a></li>
+      <li><a href="login.html" class="hover:text-cyan-300">Login</a></li>
+    </ul>
+  </nav>
+
+  <!-- Profile Container -->
+<div class="max-w-md mx-auto mt-12 p-8 bg-white/10 backdrop-blur-lg rounded-2xl shadow-lg">
+  <h2 class="text-2xl font-bold text-cyan-400 text-center mb-6">My Account</h2>
+  
+  <div class="text-center text-cyan-300 font-semibold text-lg mb-6">
+    Balance: Ksh <span id="balance">0</span>
+  </div>
+
+  <form id="profileForm" class="space-y-4">
+    <div>
+      <label for="phone" class="block text-sm mb-1">Phone Number</label>
+      <input type="text" id="phone" name="phone" required
+             class="w-full p-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-white/20 text-white">
+    </div>
+
+    <div>
+      <label for="password" class="block text-sm mb-1">New Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter new password"
+             class="w-full p-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-white/20 text-white">
+    </div>
+
+    <div>
+      <label for="pin" class="block text-sm mb-1">Change PIN</label>
+      <input type="password" id="pin" name="pin" placeholder="Enter new PIN"
+             class="w-full p-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-white/20 text-white">
+    </div>
+
+    <button type="submit" class="w-full py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold text-black transition">Save Changes</button>
+    <button type="button" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-white transition logout">Logout</button>
+  </form>
+</div>
+
+
+  <script>
+    // Initialize Supabase
+    const supabaseUrl = "YOUR_SUPABASE_URL";
+    const supabaseKey = "YOUR_SUPABASE_ANON_KEY";
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const logoutBtn = document.querySelector(".logout");
+    const profileForm = document.querySelector("#profileForm");
+    const phoneInput = document.querySelector("#phone");
+    const balanceEl = document.querySelector("#balance");
+
+    // Logout functionality
+    logoutBtn.addEventListener("click", async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        alert("Logout failed: " + error.message);
+        return;
+      }
+      window.location.href = "login.html";
+    });
+
+    // Populate user info
+    window.addEventListener("DOMContentLoaded", async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      phoneInput.value = user.user_metadata?.phone || "";
+
+      const { data, error } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data && !error) {
+        balanceEl.textContent = data.balance;
+      }
+    });
+
+    // Handle profile form submit
+    profileForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const newPhone = phoneInput.value;
+      const newPassword = document.querySelector("#password").value;
+      const newPin = document.querySelector("#pin").value;
+
+      await supabase.auth.updateUser({
+        password: newPassword || undefined,
+        data: { phone: newPhone, pin: newPin || undefined }
+      });
+
+      alert("Profile updated successfully!");
+    });
+  </script>
+</body>
+</html>

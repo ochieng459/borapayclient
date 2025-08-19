@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bora Pay - Deposit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(1200px 800px at 10% -10%, #1f1144 0%, transparent 60%),
+                  radial-gradient(900px 600px at 110% 20%, #0a3a4a 0%, transparent 55%),
+                  #0d0d0d;
+    }
+  </style>
+</head>
+<body class="text-white min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="flex justify-between items-center px-8 py-4 bg-black/40 backdrop-blur-md sticky top-0">
+    <h1 class="text-2xl font-bold text-cyan-400">Bora Pay</h1>
+    <ul class="flex space-x-6">
+      <li><a href="home.html" class="hover:text-cyan-300">Home</a></li>
+      <li><a href="services.html" class="hover:text-cyan-300">Services</a></li>
+      <li><a href="pricing.html" class="hover:text-cyan-300">Pricing</a></li>
+      <li><a href="profile.html" class="hover:text-cyan-300">Profile</a></li>
+    </ul>
+  </nav>
+
+  <main class="flex-grow px-6 md:px-16 py-16">
+    <h2 class="text-4xl font-bold text-cyan-400 mb-8 text-center">Deposit Money</h2>
+
+    <div class="max-w-md mx-auto bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-lg">
+      <form id="depositForm" class="flex flex-col gap-6">
+        <div>
+          
+          <label class="block mb-1">Amount</label>
+          <input type="number" name="amount" placeholder="Enter amount" class="w-full p-3 rounded-lg bg-black/30 border border-gray-700 text-white" required />
+        </div>
+        <div>
+          <label class="block mb-1">PIN</label>
+          <input type="password" name="pin" placeholder="Enter your PIN" minlength="4" maxlength="6" class="w-full p-3 rounded-lg bg-black/30 border border-gray-700 text-white" required />
+        </div>
+        <button type="submit" class="px-4 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-medium">Deposit</button>
+      </form>
+
+      <div id="balanceDisplay" class="mt-6 text-center text-xl text-cyan-300 hidden">
+        Current Balance: <span id="balanceAmount">0</span>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+    import bcrypt from "https://esm.sh/bcryptjs";
+
+    const supabaseUrl = "https://oaejnmigzuodvzszldjl.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZWpubWlnenVvZHZ6c3psZGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1Mjg3NDAsImV4cCI6MjA3MTEwNDc0MH0.pJCuMhExU89-uJrO8_hFzfK2ztVz1rZUjtYOygdSzG4";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const depositForm = document.getElementById("depositForm");
+    const balanceDisplay = document.getElementById("balanceDisplay");
+    const balanceAmount = document.getElementById("balanceAmount");
+
+    async function fetchBalance(userId) {
+      const { data: wallet } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", userId)
+        .single();
+      if (wallet) {
+        balanceAmount.textContent = wallet.balance.toFixed(2);
+        balanceDisplay.classList.remove("hidden");
+      }
+    }
+
+    depositForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const amount = parseFloat(depositForm.querySelector('input[name="amount"]').value);
+      const pin = depositForm.querySelector('input[name="pin"]').value;
+
+      const user = supabase.auth.user();
+      if (!user) { alert("Please login first"); return; }
+
+      // Verify PIN
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("pin_hash")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!profile) { alert("Profile not found"); return; }
+
+      const pinMatch = await bcrypt.compare(pin, profile.pin_hash);
+      if (!pinMatch) { alert("Incorrect PIN"); return; }
+
+      // Get or create wallet
+      const { data: walletData } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!walletData) {
+        await supabase.from("wallets").insert({
+          user_id: user.id,
+          balance: amount
+        });
+      } else {
+        const newBalance = parseFloat(walletData.balance) + amount;
+        await supabase
+          .from("wallets")
+          .update({ balance: newBalance })
+          .eq("user_id", user.id);
+      }
+
+      alert("Deposit successful!");
+      depositForm.reset();
+
+      // Fetch updated balance
+      fetchBalance(user.id);
+    });
+
+    // Show current balance on page load if logged in
+    const user = supabase.auth.user();
+    if (user) fetchBalance(user.id);
+  </script>
+</body>
+</html>

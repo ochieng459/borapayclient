@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bora Pay — Pricing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(1200px 800px at 10% -10%, #1f1144 0%, transparent 60%),
+                  radial-gradient(900px 600px at 110% 20%, #0a3a4a 0%, transparent 55%),
+                  #0b0f1a;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-5px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+  <!-- Navbar -->
+  <nav class="flex justify-between items-center px-8 py-4 bg-black/40 backdrop-blur-md">
+    <h1 class="text-2xl font-bold text-indigo-400">Bora Pay</h1>
+    <ul class="flex space-x-6 text-lg">
+      <li><a href="home.html" class="hover:text-indigo-300">Home</a></li>
+      <li><a href="services.html" class="hover:text-indigo-300">Services</a></li>
+      <li><a href="pricing.html" class="text-indigo-200 font-semibold">Pricing</a></li>
+      <li><a href="login.html" class="hover:text-indigo-300">Login</a></li>
+    </ul>
+  </nav>
+
+  <!-- Header -->
+  <header class="text-center mt-12 px-6">
+    <h2 class="text-4xl font-bold mb-4">Transparent Pricing</h2>
+    <p class="text-gray-300 max-w-xl mx-auto">Compare how fees stack up across top-tier platforms in Kenya.</p>
+  </header>
+
+  <!-- Pricing Grids -->
+  <main class="flex-1 px-6 py-12 grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
+    <!-- M-PESA Card -->
+    <div class="card">
+      <h3 class="text-2xl font-semibold mb-4 text-cyan-300">TO : M-PESA</h3>
+      <ul class="space-y-2 text-gray-200">
+        <li>1–100 KSh: <b>Free</b></li>
+        <li>101–500 KSh: <b>8 KSh</b></li>
+        <li>501–1,000 KSh: <b>14 KSh</b></li>
+        <li>1,001–1,500 KSh: <b>24 KSh</b></li>
+        <li>... up to 109 KSh for high-tier</li>
+      </ul>
+    </div>
+
+    <!-- Paystack Card -->
+    <div class="card">
+      <h3 class="text-2xl font-semibold mb-4 text-cyan-300">: BANKS</h3>
+      <ul class="space-y-2 text-gray-200">
+        <li>M-PESA transactions: <b>1.5% of amount</b></li>
+        <li>Local card: <b>2.9%</b></li>
+        <li>Intl card: <b>3.8%</b></li>
+        <li>Fixed transfer tiers apply as shown.</li>
+      </ul>
+    </div>
+
+    <!-- Tiers Card -->
+    <div class="card">
+      <h3 class="text-2xl font-semibold mb-4 text-cyan-300">:AIRTEL / TELKOM</h3>
+      <ul class="space-y-2 text-gray-200">
+        <li>Up to 100 KSh: <b>No Fee</b></li>
+        <li>101–1,500 KSh: <b>17 KSh</b></li>
+        <li>1,501–5,000 KSh: <b>33 KSh</b></li>
+        <li>... up to 75 KSh for 15,001–20,000 KSh</li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-6">
+    <p class="text-gray-400 text-sm">All pricing examples are based on publicly available data as of August 2025.</p>
+  </footer>
+</body>
+</html>
